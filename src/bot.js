@@ -10,7 +10,7 @@ import {
 } from "discord.js";
 import { getRuntimeConfig, PBRU_URLS } from "./config.js";
 import { buildActivityEmbed } from "./embedBuilder.js";
-import { checkAndNotify, fetchAllPbruActivities } from "./notifier.js";
+import { checkAndNotify, fetchAllPbruActivities, fetchPosterAttachment } from "./notifier.js";
 import { loadState } from "./stateStore.js";
 
 const config = getRuntimeConfig();
@@ -135,9 +135,23 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await interaction.editReply("ไม่พบรายการกิจกรรมจากหน้าเว็บสาธารณะในขณะนี้");
         return;
       }
+      const embeds = [];
+      const files = [];
+      for (let i = 0; i < showcase.length; i += 1) {
+        const item = showcase[i];
+        const att = await fetchPosterAttachment(item.imageUrl);
+        if (att) {
+          const uniqueName = `poster_${i}_${att.filename}`;
+          files.push({ attachment: att.buffer, name: uniqueName });
+          embeds.push(buildActivityEmbed(item, { imageOverride: `attachment://${uniqueName}` }));
+        } else {
+          embeds.push(buildActivityEmbed(item, { imageOverride: null }));
+        }
+      }
       await interaction.editReply({
         content: `📋 **กิจกรรมและข่าวสารล่าสุดของ มรภ.เพชรบุรี (PBRU)** (พบทั้งหมด ${fetched.allItems.length} รายการ):`,
-        embeds: showcase.map((item) => buildActivityEmbed(item)),
+        embeds,
+        files,
       });
     } catch (err) {
       await interaction.editReply(`❌ ดึงข้อมูลจาก PBRU ไม่สำเร็จ: ${err.message}`);

@@ -5,7 +5,8 @@ export const PBRU_URLS = {
   studentLogin: "https://sdd.pbru.ac.th/activity/new/student_login.php",
   studentDashboard: "https://sdd.pbru.ac.th/activity/new/student_dashboard.php",
   regPortal: "https://reg.pbru.ac.th/register",
-  logo: "https://www.pbru.ac.th/pbru/wp-content/uploads/2019/09/cropped-apple-touch-icon-144-precomposed-192x192.png",
+  logo: "https://raw.githubusercontent.com/Perth321/pbru-activity-bot/main/assets/pbru-logo.png",
+  officialLogo: "https://www.pbru.ac.th/pbru/wp-content/uploads/2019/09/cropped-apple-touch-icon-144-precomposed-192x192.png",
   saLogo: "https://sdd.pbru.ac.th/activity/new/assets/logo-pbru-sa.png",
   icalFeeds: [
     {

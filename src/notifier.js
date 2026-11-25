@@ -71,21 +71,70 @@ export async function fetchAllPbruActivities(now = new Date()) {
 }
 
 /**
- * Posts one Discord Embed directly via Discord REST API v10.
+ * Fetches an activity poster image directly so Discord hosts it reliably as an attachment.
  */
-export async function sendDiscordEmbed({ token, channelId, embed, content }) {
-  const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bot ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      content: content || undefined,
-      embeds: [embed],
-    }),
-    signal: AbortSignal.timeout(15000),
-  });
+export async function fetchPosterAttachment(imageUrl) {
+  if (!imageUrl) return null;
+  try {
+    const res = await fetch(imageUrl, {
+      headers: {
+        "User-Agent": "PBRU-Activity-Discord-Bot/1.0 (+https://sdd.pbru.ac.th/activity/new/)",
+        Referer: PBRU_URLS.news,
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "image/jpeg";
+    if (!contentType.startsWith("image/")) return null;
+    const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";
+    const buffer = Buffer.from(await res.arrayBuffer());
+    if (buffer.length === 0 || buffer.length > 8 * 1024 * 1024) return null;
+    return {
+      filename: `poster.${ext}`,
+      contentType,
+      buffer,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Posts one Discord Embed (and optional poster attachment) via Discord REST API v10.
+ */
+export async function sendDiscordEmbed({ token, channelId, embed, content, attachment }) {
+  const url = `https://discord.com/api/v10/channels/${channelId}/messages`;
+  const payload = {
+    content: content || undefined,
+    embeds: [embed],
+  };
+
+  let res;
+  if (attachment) {
+    const form = new FormData();
+    form.append("payload_json", JSON.stringify(payload));
+    form.append(
+      "files[0]",
+      new Blob([attachment.buffer], { type: attachment.contentType }),
+      attachment.filename
+    );
+    res = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bot ${token}` },
+      body: form,
+      signal: AbortSignal.timeout(20000),
+    });
+  } else {
+    res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bot ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15000),
+    });
+  }
 
   if (!res.ok) {
     const body = await res.text();
@@ -124,11 +173,16 @@ export async function checkAndNotify({
 
   const sentItems = [];
   for (const item of itemsToNotify) {
-    const embed = buildActivityEmbed(item, { isTest: forceLatest });
+    const attachment = await fetchPosterAttachment(item.imageUrl);
+    const embed = buildActivityEmbed(item, {
+      isTest: forceLatest,
+      imageOverride: attachment ? `attachment://${attachment.filename}` : null,
+    });
     await sendDiscordEmbed({
       token,
       channelId,
       embed,
+      attachment,
       content:
         item.kind === "news"
           ? "📣 **พบประกาศกิจกรรมใหม่จาก มรภ.เพชรบุรี (PBRU)**"

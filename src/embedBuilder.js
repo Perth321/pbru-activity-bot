@@ -15,7 +15,7 @@ function truncate(str, max) {
  * Builds a Discord Embed object for an activity item.
  * Compatible with both Discord REST API v10 and discord.js messages.
  */
-export function buildActivityEmbed(item, { isTest = false } = {}) {
+export function buildActivityEmbed(item, { isTest = false, imageOverride } = {}) {
   const prefix = isTest ? "🧪 [ทดสอบแจ้งเตือน] " : "";
   const descriptionParts = [];
 
@@ -90,8 +90,9 @@ export function buildActivityEmbed(item, { isTest = false } = {}) {
     timestamp: new Date().toISOString(),
   };
 
-  if (item.imageUrl) {
-    embed.image = { url: item.imageUrl };
+  const resolvedImage = imageOverride === undefined ? item.imageUrl : imageOverride;
+  if (resolvedImage) {
+    embed.image = { url: resolvedImage };
   }
 
   return embed;

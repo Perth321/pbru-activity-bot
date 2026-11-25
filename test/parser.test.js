@@ -141,8 +141,14 @@ test("buildActivityEmbed constructs valid Discord embed with PBRU icon and all f
   const [item] = parseNewsHtml(SAMPLE_NEWS_HTML);
   const embed = buildActivityEmbed(item, { isTest: true });
   assert.match(embed.title, /^🧪 \[ทดสอบแจ้งเตือน\]/);
-  assert.ok(embed.author.icon_url.includes("pbru.ac.th"));
-  assert.ok(embed.thumbnail.url.includes("pbru.ac.th"));
+  assert.ok(embed.author.icon_url.includes("pbru-logo.png"));
+  assert.ok(embed.thumbnail.url.includes("pbru-logo.png"));
   assert.equal(embed.fields.length, 6);
   assert.equal(embed.image.url, "https://sdd.pbru.ac.th/activity/new/image.php?key=img_3733.jpg");
+
+  const attachedEmbed = buildActivityEmbed(item, { imageOverride: "attachment://poster.jpg" });
+  assert.equal(attachedEmbed.image.url, "attachment://poster.jpg");
+
+  const noImageEmbed = buildActivityEmbed(item, { imageOverride: null });
+  assert.equal(noImageEmbed.image, undefined);
 });
