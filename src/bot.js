@@ -1,3 +1,4 @@
+import http from "node:http";
 import "dotenv/config";
 import {
   ActivityType,
@@ -80,6 +81,25 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
 
+let healthServer = null;
+const port = Number.parseInt(process.env.PORT || "", 10);
+if (Number.isFinite(port) && port > 0) {
+  healthServer = http.createServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(
+      JSON.stringify({
+        ok: true,
+        bot: client.user?.tag || "connecting",
+        uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
+        lastPollSummary,
+      })
+    );
+  });
+  healthServer.listen(port, "0.0.0.0", () => {
+    console.log(`[Health] HTTP server listening on 0.0.0.0:${port}`);
+  });
+}
+
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`[Bot] Logged in as ${readyClient.user.tag}`);
   readyClient.user.setPresence({
@@ -114,6 +134,7 @@ client.once(Events.ClientReady, async (readyClient) => {
 
   const shutdown = () => {
     clearInterval(interval);
+    if (healthServer) healthServer.close();
     client.destroy();
     process.exit(0);
   };
