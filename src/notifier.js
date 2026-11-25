@@ -16,6 +16,12 @@ async function fetchText(url) {
   return res.text();
 }
 
+function formatFetchError(err) {
+  const cause = err?.cause;
+  const detail = cause?.code || cause?.message || "";
+  return detail ? `${err?.message || "fetch failed"} (${detail})` : err?.message || "unknown error";
+}
+
 /**
  * Fetches all public PBRU activity sources concurrently and returns deduplicated items.
  */
@@ -31,12 +37,12 @@ export async function fetchAllPbruActivities(now = new Date()) {
   const newsItems =
     newsRes.status === "fulfilled"
       ? parseNewsHtml(newsRes.value)
-      : (errors.push(`news.php: ${newsRes.reason?.message}`), []);
+      : (errors.push(`news.php: ${formatFetchError(newsRes.reason)}`), []);
 
   const homeItems =
     homeRes.status === "fulfilled"
       ? parseHomepageEventsHtml(homeRes.value)
-      : (errors.push(`home: ${homeRes.reason?.message}`), []);
+      : (errors.push(`home: ${formatFetchError(homeRes.reason)}`), []);
 
   const icsItems = [];
   icsResults.forEach((res, idx) => {
@@ -44,7 +50,7 @@ export async function fetchAllPbruActivities(now = new Date()) {
     if (res.status === "fulfilled") {
       icsItems.push(...parseIcs(res.value, feed.name, now));
     } else {
-      errors.push(`${feed.name}: ${res.reason?.message}`);
+      errors.push(`${feed.name}: ${formatFetchError(res.reason)}`);
     }
   });
 
