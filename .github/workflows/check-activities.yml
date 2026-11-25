@@ -1,0 +1,55 @@
+name: Check PBRU Activities
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      force_latest:
+        description: "Send latest announcement as a test notification"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check PBRU activities and send Discord alerts
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
+        run: |
+          if [ "${{ github.event.inputs.force_latest }}" = "true" ]; then
+            node src/checkOnce.js --force-latest
+          else
+            node src/checkOnce.js
+          fi
+
+      - name: Save updated state
+        run: |
+          if [ -n "$(git status --porcelain data/state.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/state.json
+            git commit -m "chore: update notified PBRU activity state [skip ci]"
+            git push
+          fi

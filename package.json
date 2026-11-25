@@ -1,0 +1,27 @@
+{
+  "name": "pbru-activity-bot",
+  "version": "1.0.0",
+  "description": "Discord bot and scheduled notifier for Phetchaburi Rajabhat University (PBRU) student activities",
+  "type": "module",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node src/bot.js",
+    "check": "node src/checkOnce.js",
+    "check:test": "node src/checkOnce.js --force-latest",
+    "test": "node --test test/parser.test.js"
+  },
+  "keywords": [
+    "discord",
+    "discord-bot",
+    "pbru",
+    "rajabhat",
+    "activity",
+    "notifications"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
+  }
+}
