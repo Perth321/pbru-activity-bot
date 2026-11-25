@@ -1,6 +1,6 @@
 {
   "initialized": true,
-  "lastCheckedAt": "2026-11-25T16:37:26.159Z",
+  "lastCheckedAt": "2026-11-25T16:46:15.712Z",
   "notifiedIds": [
     "news:98de22105f65",
     "news:747bb2779b2d",
@@ -89,6 +89,9 @@
     "ics:bd3e99f7d391",
     "ics:b5386a6c5ee7",
     "ics:b1654bf6e8e7",
-    "ics:c68e9da5fbbb"
+    "ics:c68e9da5fbbb",
+    "ics:da25a72d2839",
+    "ics:e0982b4ecc51",
+    "ics:2cc6699907b2"
   ]
 }
